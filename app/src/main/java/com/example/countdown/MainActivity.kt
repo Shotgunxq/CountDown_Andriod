@@ -10,10 +10,13 @@ import android.widget.CalendarView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -27,11 +30,17 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.util.*
 
+@RequiresApi(Build.VERSION_CODES.O)
 class MainActivity : ComponentActivity() {
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Retrieve saved date from SharedPreferences
+        val prefs = getSharedPreferences("com.example.countdown.widget", Context.MODE_PRIVATE)
+        val targetDateMillis = prefs.getLong("targetDate", LocalDate.now().toEpochDay())
+        val savedDate = LocalDate.ofEpochDay(targetDateMillis)
+
         setContent {
             CountDownTheme {
                 Scaffold(
@@ -41,14 +50,14 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(innerPadding),
                         onDateSelected = { selectedDate ->
                             saveTargetDate(context = this, targetDate = selectedDate)
-                        }
+                        },
+                        initialDate = savedDate // Pass the saved date to DateSelector
                     )
                 }
             }
         }
     }
 
-    // Function to save the target date to SharedPreferences and notify the widget
     @RequiresApi(Build.VERSION_CODES.O)
     private fun saveTargetDate(context: Context, targetDate: LocalDate) {
         val prefs = context.getSharedPreferences("com.example.countdown.widget", Context.MODE_PRIVATE)
@@ -67,12 +76,12 @@ class MainActivity : ComponentActivity() {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun DateSelector(modifier: Modifier = Modifier, onDateSelected: (LocalDate) -> Unit) {
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+
+fun DateSelector(modifier: Modifier = Modifier, onDateSelected: (LocalDate) -> Unit, initialDate: LocalDate = LocalDate.now()) {
+    var selectedDate by remember { mutableStateOf(initialDate) }
 
     Column(modifier = modifier.padding(16.dp)) {
-        // Add more top padding for the CalendarView
-        Spacer(modifier = Modifier.height(8.dp)) // Add space above the calendar
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = "Made by Bence <3",
@@ -81,31 +90,33 @@ fun DateSelector(modifier: Modifier = Modifier, onDateSelected: (LocalDate) -> U
                 fontSize = MaterialTheme.typography.bodySmall.fontSize
             ),
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth() // Ensure the text takes up full width for center alignment
+            modifier = Modifier.fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(128.dp)) // Add space above the calendar
+        Spacer(modifier = Modifier.height(128.dp))
 
-        // CalendarView does not exist directly in Jetpack Compose, so we use AndroidView to embed it
+        val isDarkTheme = isSystemInDarkTheme()
+
         AndroidView(
             factory = { context ->
                 CalendarView(context).apply {
+                    if (isDarkTheme) {
+                        setBackgroundColor(Color.Gray.toArgb())
+                    }
                     // Set initial date to the current selection
-                    date = Calendar.getInstance().timeInMillis
+                    date = selectedDate.toEpochDay() * 86400000 // Convert to milliseconds
                     setOnDateChangeListener { _, year, month, dayOfMonth ->
-                        // Update selected date when user changes the date
-                        selectedDate = LocalDate.of(year, month + 1, dayOfMonth) // month is 0-indexed
+                        selectedDate = LocalDate.of(year, month + 1, dayOfMonth)
                         onDateSelected(selectedDate)
                     }
                 }
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp) // adjust size as needed
+                .height(300.dp)
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Calculate days remaining and display
         val currentDate = LocalDate.now()
         val daysRemaining = ChronoUnit.DAYS.between(currentDate, selectedDate).toInt()
 
@@ -116,18 +127,18 @@ fun DateSelector(modifier: Modifier = Modifier, onDateSelected: (LocalDate) -> U
                 fontSize = MaterialTheme.typography.titleLarge.fontSize
             ),
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth() // Ensure the text takes up full width for center alignment
+            modifier = Modifier.fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(12.dp)) // Add space above the calendar
+        Spacer(modifier = Modifier.height(12.dp))
 
         Text(
             text = buildAnnotatedString {
                 append("Crafted in haste but with deep affection for ")
                 withStyle(style = androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append("Sofia") // This part is bold
+                    append("Sofia")
                 }
                 withStyle(style = androidx.compose.ui.text.SpanStyle(fontStyle = FontStyle.Italic)) {
-                    append("—to count down the days until we meet again.") // This part is italic
+                    append("—to count down the days until we meet again.")
                 }
             },
             style = MaterialTheme.typography.bodyLarge,

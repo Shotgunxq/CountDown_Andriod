@@ -1,4 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.CountDown" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="CalendarView.White" parent="@android:style/Widget.CalendarView">
+        <item name="android:headerMonthTextAppearance">@style/CalendarView.HeaderTextAppearance</item>
+        <item name="android:weekNumberColor">@android:color/white</item>
+        <item name="android:weekSeparatorLineColor">@android:color/white</item>
+        <item name="android:selectedWeekBackgroundColor">@android:color/black</item>
+        <item name="android:dayOfWeekTextAppearance">@style/CalendarView.DayOfWeekTextAppearance</item>
+        <item name="android:focusedMonthDateColor">@color/white</item>
+        <item name="android:unfocusedMonthDateColor">@color/white</item>
+<!--        <item name="android:dayTextColor">@color/white</item>-->
+    </style>
+
+    <style name="CalendarView.HeaderTextAppearance" parent="@android:style/TextAppearance">
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="CalendarView.DayOfWeekTextAppearance" parent="@android:style/TextAppearance">
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="DatePicker.White" parent="@android:style/Widget.Material.Light.DatePicker">
+        <item name="android:datePickerMode">calendar</item>
+        <item name="android:calendarViewShown">true</item>
+        <item name="android:spinnersShown">false</item>
+        <item name="android:headerBackground">@android:color/black</item>
+        <item name="android:calendarTextColor">@android:color/white</item>
+        <item name="android:dayOfWeekBackground">@android:color/black</item>
+    </style>
+
+    <style name="ThemeOverlay.App.Calendar" parent="">
+        <item name="android:calendarViewStyle">@style/CalendarView.White</item>
+        <item name="android:datePickerStyle">@style/DatePicker.White</item>
+    </style>
 </resources>
